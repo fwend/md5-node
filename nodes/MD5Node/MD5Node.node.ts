@@ -6,15 +6,15 @@ import {
 	NodeOperationError,
 } from 'n8n-workflow';
 
-export class ExampleNode implements INodeType {
+export class MD5Node implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'Example Node',
-		name: 'exampleNode',
+		displayName: 'MD5 Node',
+		name: 'md5 node',
 		group: ['transform'],
 		version: 1,
-		description: 'Basic Example Node',
+		description: 'MD5 Hashing Node',
 		defaults: {
-			name: 'Example Node',
+			name: 'MD5',
 		},
 		inputs: ['main'],
 		outputs: ['main'],
