@@ -32,6 +32,9 @@ export class ExampleNode implements INodeType {
 		],
 	};
 
+
+
+
 	// The function below is responsible for actually doing whatever this node
 	// is supposed to do. In this case, we're just appending the `myString` property
 	// with whatever the user has entered.
