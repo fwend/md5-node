@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/fwend/n8n-nodes-webinar.git"
+    "url": "https://github.com/fwend/md5-node.git"
   },
   "main": "index.js",
   "scripts": {
@@ -35,7 +35,8 @@
     ],
     "nodes": [
       "dist/nodes/ExampleNode/ExampleNode.node.js",
-      "dist/nodes/HttpBin/HttpBin.node.js"
+      "dist/nodes/HttpBin/HttpBin.node.js",
+      "dist/nodes/MD5Node/MD5Node.node.js"
     ]
   },
   "devDependencies": {
