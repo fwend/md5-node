@@ -1,10 +1,15 @@
-import { IExecuteFunctions } from 'n8n-core';
+import {IExecuteFunctions} from 'n8n-core';
 import {
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
 	NodeOperationError,
 } from 'n8n-workflow';
+
+import type {BinaryToTextEncoding} from 'crypto';
+import {createHash} from 'crypto';
+import {deepCopy} from 'n8n-workflow';
+import set from 'lodash.set';
 
 export class MD5Node implements INodeType {
 	description: INodeTypeDescription = {
@@ -22,40 +27,65 @@ export class MD5Node implements INodeType {
 			// Node properties which the user gets displayed and
 			// can change on the node.
 			{
-				displayName: 'My String',
-				name: 'myString',
+				displayName: 'Value',
+				name: 'val',
 				type: 'string',
 				default: '',
-				placeholder: 'Placeholder value',
-				description: 'The description text',
+				placeholder: '',
+				description: 'Value to be hashed',
+			},
+			{
+				displayName: 'Key',
+				name: 'key',
+				type: 'string',
+				default: '',
+				placeholder: '',
+				description: 'Key to store the result',
 			},
 		],
 	};
 
-	// The function below is responsible for actually doing whatever this node
-	// is supposed to do. In this case, we're just appending the `myString` property
-	// with whatever the user has entered.
-	// You can make async calls and use `await`.
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
+		const returnData: INodeExecutionData[] = [];
 
 		let item: INodeExecutionData;
-		let myString: string;
+		let key: string, val: string;
+		let newItem: INodeExecutionData;
 
-		// Iterates over all input items and add the key "myString" with the
-		// value the parameter "myString" resolves to.
-		// (This could be a different value for each item in case it contains an expression)
+		// Iterates over all input items
 		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
 			try {
-				myString = this.getNodeParameter('myString', itemIndex, '') as string;
 				item = items[itemIndex];
 
-				item.json['myString'] = myString;
+				key = this.getNodeParameter('key', itemIndex, '') as string;
+				val = this.getNodeParameter('val', itemIndex, '') as string;
+
+				if (key && val) {
+					const newValue = createHash('MD5').update(val).digest('HEX' as BinaryToTextEncoding);
+					if (key.includes('.')) {
+						// Uses dot notation so copy all data
+						newItem = {
+							json: deepCopy(item.json),
+							pairedItem: {
+								item: itemIndex,
+							},
+						};
+					} else {
+						newItem = {
+							json: {...item.json},
+							pairedItem: {
+								item: itemIndex,
+							},
+						};
+						set(newItem, `json.${key}`, newValue);
+						returnData.push(newItem)
+					}
+				}
 			} catch (error) {
-				// This node should never fail but we want to showcase how
-				// to handle errors.
+
 				if (this.continueOnFail()) {
-					items.push({ json: this.getInputData(itemIndex)[0].json, error, pairedItem: itemIndex });
+					items.push({json: this.getInputData(itemIndex)[0].json, error, pairedItem: itemIndex});
 				} else {
 					// Adding `itemIndex` allows other workflows to handle this error
 					if (error.context) {
@@ -71,6 +101,6 @@ export class MD5Node implements INodeType {
 			}
 		}
 
-		return this.prepareOutputData(items);
+		return this.prepareOutputData(returnData);
 	}
 }
