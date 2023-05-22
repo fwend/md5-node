@@ -26,6 +26,7 @@ export class MD5Node implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'MD5 Node',
 		name: 'md5 node',
+		icon: 'file:md5.svg',
 		group: ['transform'],
 		version: 1,
 		description: 'MD5 Hashing Node',
@@ -39,7 +40,7 @@ export class MD5Node implements INodeType {
 			// can change on the node.
 			{
 				displayName:
-					'You have been put on notice',
+					'<b>Hash Single Fields.</b><br><br> Capture the value and specify the output path.',
 				name: 'infoBox',
 				type: 'notice',
 				default: '',
@@ -79,6 +80,13 @@ export class MD5Node implements INodeType {
 						],
 					},
 				],
+			},
+			{
+				displayName:
+					'<b>Hash Arrays.</b><br><br> Expects an array of objects. Specify the <i>fixed</i> path to the array, and a comma separated list of keys to hash. Is always done in-place.',
+				name: 'infoBox',
+				type: 'notice',
+				default: '',
 			},
 			{
 				displayName: 'Arrays to Hash',
@@ -138,8 +146,8 @@ export class MD5Node implements INodeType {
 					},
 				};
 
-				const values = this.getNodeParameter('fieldsToHash.values', itemIndex, '') as Array<IKeyValuePair>
-				for (const { val, key } of values || []) {
+				const fields = this.getNodeParameter('fieldsToHash.values', itemIndex, '') as Array<IKeyValuePair>
+				for (const {val, key} of fields || []) {
 
 					if (val && key) {
 						const newValue = createHash('MD5').update(val).digest('HEX' as BinaryToTextEncoding);
@@ -148,20 +156,21 @@ export class MD5Node implements INodeType {
 				}
 
 				const arrays = this.getNodeParameter('arraysToHash.values', itemIndex, '') as Array<IPathKeysPair>
-				for (const { path, keys } of arrays || []) {
+
+				for (const {path, keys} of arrays || []) {
 
 					if (path && keys) {
-						  const arr = get(item, `json.${path}`) as Array<any>
-						  if (arr && arr.length) {
-								 const keysToHash = keys.split(',').map(s => s.trim()) as Array<string>
-								 for (const keyToHash of keysToHash) {
-									   const obj = arr[0]
-									   if (obj[keyToHash]) {
-											 const newValue = createHash('MD5').update(obj[keyToHash]).digest('HEX' as BinaryToTextEncoding);
-											 set(newItem, `json.${path}[0].${keyToHash}`, newValue);
-										 }
-								 }
+						const arr = get(item, `json.${path}`) as Array<any>
+						for (let i = 0; arr && i < arr.length; i++) {
+
+							const keysToHash = keys.split(',').map(s => s.trim()) as Array<string>
+							for (const key of keysToHash) {
+								if (arr[i][key]) {
+									const newValue = createHash('MD5').update(arr[i][key]).digest('HEX' as BinaryToTextEncoding);
+									set(newItem, `json.${path}[${i}].${key}`, newValue);
+								}
 							}
+						}
 					}
 				}
 
