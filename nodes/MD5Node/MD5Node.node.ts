@@ -221,7 +221,6 @@ export class MD5Node implements INodeType {
 				}
 			}
 		}
-		//console.log(paths)
 		return paths;
 	}
 }
