@@ -83,7 +83,9 @@ export class MD5Node implements INodeType {
 			},
 			{
 				displayName:
-					'<b>Hash Arrays.</b><br><br> Expects an array of objects. Specify the <i>fixed</i> path to the array, and a comma separated list of keys to hash. Is always done in-place.',
+					'<b>Hash Arrays.</b><br><br> Expects an array of objects. Specify the <i>fixed</i> path to the array, and a ' +
+					'comma separated list of keys to hash. Is always done in-place. You can use empty brackets as wildcard to indicate ' +
+					'arrays of arrays, for instance: depth1[].depth2[].depth3',
 				name: 'infoBox',
 				type: 'notice',
 				default: '',
@@ -159,19 +161,22 @@ export class MD5Node implements INodeType {
 
 				for (const {path, keys} of arrays || []) {
 
-					if (path && keys) {
-						const arr = get(item, `json.${path}`) as Array<any>
-						for (let i = 0; arr && i < arr.length; i++) {
+					MD5Node.resolvePaths(path, item).forEach((actualPath) => {
+						if (actualPath && keys) {
 
-							const keysToHash = keys.split(',').map(s => s.trim()) as Array<string>
-							for (const key of keysToHash) {
-								if (arr[i][key]) {
-									const newValue = createHash('MD5').update(arr[i][key]).digest('HEX' as BinaryToTextEncoding);
-									set(newItem, `json.${path}[${i}].${key}`, newValue);
+							const arr = get(item, `json.${actualPath}`) as Array<any>
+							for (let i = 0; arr && i < arr.length; i++) {
+
+								const keysToHash = keys.split(',').map(s => s.trim()) as Array<string>
+								for (const key of keysToHash) {
+									if (arr[i][key]) {
+										const newValue = createHash('MD5').update(arr[i][key]).digest('HEX' as BinaryToTextEncoding);
+										set(newItem, `json.${actualPath}[${i}].${key}`, newValue);
+									}
 								}
 							}
 						}
-					}
+					});
 				}
 
 				returnData.push(newItem)
@@ -196,5 +201,27 @@ export class MD5Node implements INodeType {
 		}
 
 		return this.prepareOutputData(returnData);
+	}
+
+	static resolvePaths(path: string, item: INodeExecutionData, paths: Array<string> = []): Array<string> {
+		// treat empty brackets as wildcard and resolve to actual paths
+		const idx = path.indexOf('[]');
+		if (idx < 0) {
+			paths.push(path)
+		} else {
+			const prefix = path.substring(0, idx)
+			const suffix = path.substring(idx + 2)
+			const arr = get(item, `json.${prefix}`) as Array<any>
+			for (let i = 0; arr && i < arr.length; i++) {
+				const newPrefix = `${prefix}[${i}]`
+				if (suffix) {
+					MD5Node.resolvePaths(newPrefix + suffix, item, paths)
+				} else {
+					paths.push(newPrefix)
+				}
+			}
+		}
+		//console.log(paths)
+		return paths;
 	}
 }
