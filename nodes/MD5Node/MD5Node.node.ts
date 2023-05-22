@@ -40,7 +40,7 @@ export class MD5Node implements INodeType {
 			// can change on the node.
 			{
 				displayName:
-					'<b>Hash Single Fields.</b><br><br> Capture the value and specify the output path.',
+					'<b>Hash Single Fields.</b><br><br> Capture the value using an expression and specify the <i>fixed</i> output path.',
 				name: 'infoBox',
 				type: 'notice',
 				default: '',
