@@ -9,8 +9,7 @@ import {
 import type {BinaryToTextEncoding} from 'crypto';
 import {createHash} from 'crypto';
 import {deepCopy} from 'n8n-workflow';
-import set from 'lodash.set';
-import get from 'lodash.get';
+import {set, get} from 'lodash';
 
 interface IKeyValuePair {
 	val: string;
@@ -85,7 +84,7 @@ export class MD5Node implements INodeType {
 				displayName:
 					'<b>Hash Arrays.</b><br><br> Expects an array of objects. Specify the <i>fixed</i> path to the array, and a ' +
 					'comma separated list of keys to hash. Is always done in-place. You can use empty brackets as wildcard to indicate ' +
-					'arrays of arrays, for instance: depth1[].depth2[].depth3',
+					'arrays of arrays, for instance: level1[].level2[].level3',
 				name: 'infoBox',
 				type: 'notice',
 				default: '',
@@ -205,6 +204,13 @@ export class MD5Node implements INodeType {
 
 	static resolvePaths(path: string, item: INodeExecutionData, paths: Array<string> = []): Array<string> {
 		// treat empty brackets as wildcard and resolve to actual paths
+		// level1[].level2[].level3
+		// becomes:
+		// level1[0].level2[0].level3
+		// level1[0].level2[1].level3
+		// level1[1].level2[0].level3
+		// level1[1].level2[1].level3
+
 		const idx = path.indexOf('[]');
 		if (idx < 0) {
 			paths.push(path)
