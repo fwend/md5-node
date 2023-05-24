@@ -168,8 +168,9 @@ export class MD5Node implements INodeType {
 
 								const keysToHash = keys.split(',').map(s => s.trim()) as Array<string>
 								for (const key of keysToHash) {
-									if (arr[i][key]) {
-										const newValue = createHash('MD5').update(arr[i][key]).digest('HEX' as BinaryToTextEncoding);
+									const val = get(arr[i], key)
+									if (val) {
+										const newValue = createHash('MD5').update(val).digest('HEX' as BinaryToTextEncoding);
 										set(newItem, `json.${actualPath}[${i}].${key}`, newValue);
 									}
 								}
